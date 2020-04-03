@@ -5,11 +5,12 @@ import classNames from 'classnames'
 import { createStyles, withStyles, WithStyles, Theme } from '@material-ui/core/styles'
 import { Paper } from '@material-ui/core'
 import {
-    Editor, EditorState, convertFromRaw, RichUtils, AtomicBlockUtils,
+    EditorState, convertFromRaw, RichUtils, AtomicBlockUtils,
     CompositeDecorator, convertToRaw, DefaultDraftBlockRenderMap, DraftEditorCommand,
     DraftHandleValue, DraftStyleMap, ContentBlock, DraftDecorator, getVisibleSelectionRect, 
     SelectionState, KeyBindingUtil, getDefaultKeyBinding
 } from 'draft-js'
+import Editor from 'draft-js-plugins-editor';
 import Toolbar, { TToolbarControl, TCustomControl, TToolbarButtonSize } from './components/Toolbar'
 import Link from './components/Link'
 import Media from './components/Media'
@@ -80,6 +81,7 @@ export type TDecorator = {
 type TDraftEditorProps = {
     spellCheck?: boolean
     stripPastedStyles?: boolean
+    plugins: any[]
 }
 
 type TKeyCommand = {
@@ -204,6 +206,7 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
     const [focus, setFocus] = useState(false)
 
     const [editorState, setEditorState] = useState(() => useEditorState(props))
+    const [remountKey, setRemountKey] = useState<number>(0);
     const [customRenderers, setCustomRenderers] = useState<TCustomRenderers>({
         style: undefined,
         block: undefined
@@ -254,7 +257,10 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
             style: customStyleMap,
             block: DefaultDraftBlockRenderMap.merge(blockRenderMap, Immutable.Map(customBlockMap))
         })
-        setEditorState(editorState)
+        setEditorState(editorState);
+        if (props.draftEditorProps && props.draftEditorProps.plugins) {
+            setRemountKey(remountKey+1);
+        }
         toggleMouseUpListener(true)
         return () => {
             toggleMouseUpListener()
@@ -296,7 +302,7 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
                 end: selection.getEndOffset()
             }
 
-            const editor: HTMLElement = (editorRef.current as any).editor
+            const editor: HTMLElement = (editorRef.current as any).editor.editor
             const selectionRect = getVisibleSelectionRect(window)
             const editorRect = editor.getBoundingClientRect()
             if (!selectionRect) {
@@ -507,7 +513,7 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
     }
 
     const toggleMouseUpListener = (addAfter = false) => {
-        const editor: HTMLElement = (editorRef.current as any).editor
+        const editor: HTMLElement = (editorRef.current as any).editor.editor
         if (!editor) {
             return
         }
@@ -690,14 +696,14 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
         return AtomicBlockUtils.insertAtomicBlock(newEditorStateRaw, entityKey, ' ')
     }
 
-    const keyBindingFn = (e: React.KeyboardEvent<{}>): string | null => {
+    const keyBindingFn = (e: React.KeyboardEvent<{}>): string | null | undefined => {
         if (hasCommandModifier(e) && props.keyCommands) {
             const comm = props.keyCommands.find(comm => comm.key === e.keyCode)
             if (comm) {
                 return comm.name
             }
         }
-        return getDefaultKeyBinding(e)
+        return undefined;
     }
 
     const renderToolbar = props.toolbar === undefined || props.toolbar
@@ -772,6 +778,7 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
                             handleBeforeInput={handleBeforeInput}
                             keyBindingFn={keyBindingFn}
                             ref={editorRef}
+                            key={remountKey}
                             {...props.draftEditorProps}
                         />
                     </div>
