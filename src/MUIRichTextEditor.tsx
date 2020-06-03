@@ -98,7 +98,7 @@ type TKeyCommand = {
 interface IMUIRichTextEditorProps extends WithStyles<typeof styles> {
     id?: string
     value?: any
-    label?: string,
+    label?: string
     readOnly?: boolean
     inheritFontSize?: boolean
     error?: boolean
@@ -110,8 +110,10 @@ interface IMUIRichTextEditorProps extends WithStyles<typeof styles> {
     inlineToolbar?: boolean
     inlineToolbarControls?: Array<TToolbarControl>
     draftEditorProps?: TDraftEditorProps
+    keyBindingFn?: (e: React.KeyboardEvent<{}>) => string | null | undefined
     keyCommands?: TKeyCommand[]
     maxLength?: number
+    maxHeight?: number
     onSave?: (data: string) => void
     onBlur?: (data: string) => void
     onFocus?: () => void
@@ -200,8 +202,9 @@ const useEditorState = (props: IMUIRichTextEditorProps) => {
         }))
     }
     const decorator = new CompositeDecorator(decorators)
+    const rawContent = JSON.parse(props.value)
     return (props.value)
-        ? EditorState.createWithContent(convertFromRaw(JSON.parse(props.value)), decorator)
+        ? EditorState.createWithContent(convertFromRaw(rawContent), decorator)
         : EditorState.createEmpty(decorator)
 }
 
@@ -767,7 +770,7 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
                     />
                     : null}
                 {placeholder}
-                <div id={`${id}-editor`} className={classes.editor}>
+                <div id={`${id}-editor`} className={classes.editor} style={{maxHeight:props.maxHeight}}>
                     <div id={`${id}-editor-container`} className={classNames(className, classes.editorContainer, {
                         [classes.editorReadOnly]: !editable,
                         [classes.error]: props.error
