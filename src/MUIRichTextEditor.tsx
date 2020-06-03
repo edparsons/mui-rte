@@ -18,6 +18,10 @@ import Blockquote from './components/Blockquote'
 import CodeBlock from './components/CodeBlock'
 import UrlPopover, { TAlignment, TUrlData, TMediaType } from './components/UrlPopover'
 import { getSelectionInfo, getCompatibleSpacing, removeBlockFromMap, atomicBlockExists } from './utils'
+import {
+    registerCopySource,
+    handleDraftEditorPastedText,
+  } from "draftjs-conductor";
 
 const styles = ({ spacing, typography, palette }: Theme) => createStyles({
     root: {
@@ -222,6 +226,9 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
     const [focusMediaKey, setFocusMediaKey] = useState("")
 
     const editorRef = useRef(null)
+    
+    const [copySource, setCopySource] = useState<any>(() => registerCopySource(editorRef));
+
     const selectionRef = useRef<TStateOffset>({
         start: 0,
         end: 0
@@ -704,14 +711,23 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
         return AtomicBlockUtils.insertAtomicBlock(newEditorStateRaw, entityKey, ' ')
     }
 
-    const keyBindingFn = (e: React.KeyboardEvent<{}>): string | null | undefined => {
+    const handlePastedText = (text: string, html: string| undefined, editorState: EditorState) => {
+        let newState = handleDraftEditorPastedText(html, editorState);
+        if (newState) {
+            handleChange(newState);
+            return 'handled';
+        }
+        return 'not-handled';
+    }
+
+    const keyBindingFn = (e: React.KeyboardEvent<{}>): string | null  => {
         if (hasCommandModifier(e) && props.keyCommands) {
             const comm = props.keyCommands.find(comm => comm.key === e.keyCode)
             if (comm) {
                 return comm.name
             }
         }
-        return undefined;
+        return null;
     }
 
     const renderToolbar = props.toolbar === undefined || props.toolbar
@@ -787,6 +803,7 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
                             keyBindingFn={keyBindingFn}
                             ref={editorRef}
                             key={remountKey}
+                            handlePastedText={handlePastedText}
                             {...props.draftEditorProps}
                         />
                     </div>
