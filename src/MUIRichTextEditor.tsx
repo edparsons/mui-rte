@@ -86,11 +86,6 @@ type TDraftEditorProps = {
     spellCheck?: boolean
     stripPastedStyles?: boolean
     plugins: any[]
-    handlePastedText?:  (
-        text: string,
-        html: string | undefined,
-        editorState: EditorState,
-    ) => DraftHandleValue
 }
 
 type TKeyCommand = {
