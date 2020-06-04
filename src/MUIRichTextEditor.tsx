@@ -226,8 +226,9 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
     const [focusMediaKey, setFocusMediaKey] = useState("")
 
     const editorRef = useRef(null)
-    
-    const [copySource, setCopySource] = useState<any>(() => registerCopySource(editorRef));
+
+    // prevent memleak
+    let copySource: null | { unregister: () => void} = null
 
     const selectionRef = useRef<TStateOffset>({
         start: 0,
@@ -276,6 +277,13 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
         if (props.draftEditorProps && props.draftEditorProps.plugins) {
             setRemountKey(remountKey+1);
         }
+
+        if (copySource !== null) {
+            copySource.unregister();
+            copySource = null;
+        }
+        copySource = registerCopySource((editorRef.current as any).editor);
+
         toggleMouseUpListener(true)
         return () => {
             toggleMouseUpListener()
