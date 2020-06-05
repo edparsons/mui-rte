@@ -732,14 +732,14 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
         return 'not-handled';
     }
 
-    const keyBindingFn = (e: React.KeyboardEvent<{}>): string | null  => {
+    const keyBindingFn = (e: React.KeyboardEvent<{}>): string | null | undefined  => {
         if (hasCommandModifier(e) && props.keyCommands) {
             const comm = props.keyCommands.find(comm => comm.key === e.keyCode)
             if (comm) {
                 return comm.name
             }
         }
-        return null;
+        return undefined;
     }
 
     const renderToolbar = props.toolbar === undefined || props.toolbar
