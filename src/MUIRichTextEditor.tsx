@@ -274,19 +274,23 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
         }
 
         if (copySource !== null) {
-            copySource.unregister();
-            copySource = null;
+            copySource.unregister()
+            copySource = null
         }
-        // check if editor exists because register registerCopySource does not check it
-        if (((editorRef.current as any)?.editor)?.editor) {
-            copySource = registerCopySource((editorRef.current as any).editor);
+        // check if editor exists because register; registerCopySource does not check it
+        if ((editorRef.current as any) &&
+            (editorRef.current as any).editor &&
+            (editorRef.current as any).editor.editor) {
+            copySource = registerCopySource((editorRef.current as any).editor)
         }
 
         toggleMouseUpListener(true)
         return () => {
             toggleMouseUpListener()
-            copySource?.unregister();
-            copySource = null;
+            if (copySource !== null) {
+                copySource.unregister()
+                copySource = null
+            }
         }
     }, [props.value])
 
