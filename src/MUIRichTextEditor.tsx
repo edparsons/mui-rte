@@ -277,11 +277,16 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
             copySource.unregister();
             copySource = null;
         }
-        copySource = registerCopySource((editorRef.current as any).editor);
+        // check if editor exists because register registerCopySource does not check it
+        if (((editorRef.current as any)?.editor)?.editor) {
+            copySource = registerCopySource((editorRef.current as any).editor);
+        }
 
         toggleMouseUpListener(true)
         return () => {
             toggleMouseUpListener()
+            copySource?.unregister();
+            copySource = null;
         }
     }, [props.value])
 
