@@ -18,6 +18,10 @@ import Blockquote from './components/Blockquote'
 import CodeBlock from './components/CodeBlock'
 import UrlPopover, { TAlignment, TUrlData, TMediaType } from './components/UrlPopover'
 import { getSelectionInfo, getCompatibleSpacing, removeBlockFromMap, atomicBlockExists } from './utils'
+import {
+    registerCopySource,
+    handleDraftEditorPastedText,
+  } from "draftjs-conductor";
 
 const styles = ({ spacing, typography, palette }: Theme) => createStyles({
     root: {
@@ -217,6 +221,10 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
     const [focusMediaKey, setFocusMediaKey] = useState("")
 
     const editorRef = useRef(null)
+
+    // prevent memleak
+    let copySource: null | { unregister: () => void} = null
+
     const selectionRef = useRef<TStateOffset>({
         start: 0,
         end: 0
@@ -264,9 +272,25 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
         if (props.draftEditorProps && props.draftEditorProps.plugins) {
             setRemountKey(remountKey+1);
         }
+
+        if (copySource !== null) {
+            copySource.unregister()
+            copySource = null
+        }
+        // check if editor exists because register; registerCopySource does not check it
+        if ((editorRef.current as any) &&
+            (editorRef.current as any).editor &&
+            (editorRef.current as any).editor.editor) {
+            copySource = registerCopySource((editorRef.current as any).editor)
+        }
+
         toggleMouseUpListener(true)
         return () => {
             toggleMouseUpListener()
+            if (copySource !== null) {
+                copySource.unregister()
+                copySource = null
+            }
         }
     }, [props.value])
 
@@ -699,7 +723,16 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
         return AtomicBlockUtils.insertAtomicBlock(newEditorStateRaw, entityKey, ' ')
     }
 
-    const keyBindingFn = (e: React.KeyboardEvent<{}>): string | null | undefined => {
+    const handlePastedText = (text: string, html: string| undefined, editorState: EditorState) => {
+        let newState = handleDraftEditorPastedText(html, editorState);
+        if (newState) {
+            handleChange(newState);
+            return 'handled';
+        }
+        return 'not-handled';
+    }
+
+    const keyBindingFn = (e: React.KeyboardEvent<{}>): string | null | undefined  => {
         if (hasCommandModifier(e) && props.keyCommands) {
             const comm = props.keyCommands.find(comm => comm.key === e.keyCode)
             if (comm) {
@@ -782,6 +815,7 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
                             keyBindingFn={keyBindingFn}
                             ref={editorRef}
                             key={remountKey}
+                            handlePastedText={handlePastedText}
                             {...props.draftEditorProps}
                         />
                     </div>
