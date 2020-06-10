@@ -723,7 +723,7 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
         return AtomicBlockUtils.insertAtomicBlock(newEditorStateRaw, entityKey, ' ')
     }
 
-    const handlePastedText = (text: string, html: string| undefined, editorState: EditorState) => {
+    const handlePastedText = (_text: string, html: string| undefined, editorState: EditorState) => {
         let newState = handleDraftEditorPastedText(html, editorState);
         if (newState) {
             handleChange(newState);
@@ -732,14 +732,14 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
         return 'not-handled';
     }
 
-    const keyBindingFn = (e: React.KeyboardEvent<{}>): string | null | undefined  => {
+    const keyBindingFn = (e: React.KeyboardEvent<{}>): string | null => {
         if (hasCommandModifier(e) && props.keyCommands) {
             const comm = props.keyCommands.find(comm => comm.key === e.keyCode)
             if (comm) {
                 return comm.name
             }
         }
-        return undefined;
+        return null;
     }
 
     const renderToolbar = props.toolbar === undefined || props.toolbar
