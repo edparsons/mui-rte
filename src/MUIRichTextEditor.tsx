@@ -570,7 +570,7 @@ const MUIRichTextEditor: RefForwardingComponent<any, IMUIRichTextEditorProps> = 
         }
 
         const contentState = editorState.getCurrentContent()
-        let replaceEditorState = null
+        let replaceEditorState: EditorState|null = null
         const data = {
             url: url
         }
