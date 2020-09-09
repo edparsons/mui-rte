@@ -21,7 +21,7 @@ const getSelectionInfo = (editorState: EditorState): TSelectionInfo => {
     const contentBlock = currentContent.getBlockForKey(selection.getStartKey())
     const currentStyle = editorState.getCurrentInlineStyle()
     const linkKey = contentBlock.getEntityAt(startOffset)
-    let entityType = null
+    let entityType: string|null = null
     if (linkKey) {
         const linkInstance = currentContent.getEntity(linkKey)
         entityType = linkInstance.getType()
